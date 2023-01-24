@@ -1,5 +1,7 @@
 global using Microsoft.EntityFrameworkCore;
 global using Reminder.Server.Services.ShoppingListService;
+global using Reminder.Server.Services.ShoppingItemService;
+global using Reminder.Shared;
 using Microsoft.AspNetCore.ResponseCompression;
 using Reminder.Server.Data;
 
@@ -17,6 +19,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddScoped<IShoppingListService, ShoppingListService>();
+builder.Services.AddScoped<IShoppingItemService, ShoppingItemService>();
 
 var app = builder.Build();
 

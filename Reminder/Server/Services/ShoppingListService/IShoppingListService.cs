@@ -1,6 +1,4 @@
-﻿using Reminder.Shared;
-
-namespace Reminder.Server.Services.ShoppingListService;
+﻿namespace Reminder.Server.Services.ShoppingListService;
 
 public interface IShoppingListService
 {

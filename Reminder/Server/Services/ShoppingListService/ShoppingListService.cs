@@ -84,21 +84,7 @@ public class ShoppingListService : IShoppingListService
         }
 
         dbShoppingList.Name = shoppingList.Name;
-
-        foreach (var variant in shoppingList.ShoppingItemVariants)
-        {
-            var dbVariant = await _dataContext.ShoppingItemVariants.SingleOrDefaultAsync(v =>
-            v.ShoppingItemId == variant.ShoppingItemId && v.ShoppingListId == variant.ShoppingListId);
-
-            if (dbVariant == null)
-            {
-               await _dataContext.ShoppingItemVariants.AddAsync(variant);
-            }
-            else
-            {
-                dbVariant.ShoppingItemId= variant.ShoppingItemId;
-            }
-        }
+        dbShoppingList.ShoppingItemVariants = shoppingList.ShoppingItemVariants;
 
         await _dataContext.SaveChangesAsync();
         return new ServiceResponse<ShoppingList> { Data = shoppingList };
