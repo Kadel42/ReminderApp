@@ -12,6 +12,50 @@ public class ShoppingListService : IShoppingListService
         _dataContext = dataContext;
     }
 
+    public async Task<ServiceResponse<ShoppingList>> AddItemToList(int shoppingListId, int shoppingItemId)
+    {
+        var shoppingItemVariant = await _dataContext.ShoppingItemVariants.FindAsync(shoppingListId, shoppingItemId);
+        var shoppingList = await _dataContext.ShoppingLists.FindAsync(shoppingListId);
+        var shoppingItem = await _dataContext.ShoppingItems.FindAsync(shoppingItemId);
+
+        if (shoppingList == null)
+        {
+            return new ServiceResponse<ShoppingList>
+            {
+                Success = false,
+                Message = "List not found."
+            };
+        }
+
+        if (shoppingItem == null)
+        {
+            return new ServiceResponse<ShoppingList>
+            {
+                Success = false,
+                Message = "Item not found."
+            };
+        }
+
+        if (shoppingItemVariant != null)
+        {
+            return new ServiceResponse<ShoppingList>
+            {
+                Success = false,
+                Message = "Item is already on the list."
+            };
+        }
+        _dataContext.ShoppingItemVariants.Add(new ShoppingItemVariant
+        {
+            ShoppingItemId = shoppingItemId,
+            ShoppingListId = shoppingListId
+        });
+
+        await _dataContext.SaveChangesAsync();
+
+        return new ServiceResponse<ShoppingList> { Data = shoppingList };
+    }
+
+
     public async Task<ServiceResponse<ShoppingList>> CreateShoppingList(ShoppingList shoppingList)
     {
        _dataContext.ShoppingLists.Add(shoppingList);
@@ -68,6 +112,45 @@ public class ShoppingListService : IShoppingListService
             Data = await _dataContext.ShoppingLists.Where(s => !s.IsSecret).ToListAsync() 
         };
         return response;
+    }
+
+    public async Task<ServiceResponse<ShoppingList>> RemoveItemFromList(int shoppingListId, int shoppingItemId)
+    {
+        var shoppingItemVariant = await _dataContext.ShoppingItemVariants.FindAsync(shoppingListId, shoppingItemId);
+        var shoppingList = await _dataContext.ShoppingLists.FindAsync(shoppingListId);
+        var shoppingItem = await _dataContext.ShoppingItems.FindAsync(shoppingItemId);
+
+        if (shoppingList == null)
+        {
+            return new ServiceResponse<ShoppingList>
+            {
+                Success = false,
+                Message = "List not found."
+            };
+        }
+
+        if (shoppingItem == null)
+        {
+            return new ServiceResponse<ShoppingList>
+            {
+                Success = false,
+                Message = "Item not found."
+            };
+        }
+
+        if (shoppingItemVariant == null)
+        {
+            return new ServiceResponse<ShoppingList>
+            {
+                Success = false,
+                Message = "Item is not on the list."
+            };
+        }
+        _dataContext.ShoppingItemVariants.Remove(shoppingItemVariant);
+
+        await _dataContext.SaveChangesAsync();
+
+        return new ServiceResponse<ShoppingList> { Data = shoppingList };
     }
 
     public async Task<ServiceResponse<ShoppingList>> UpdateShoppingList(ShoppingList shoppingList)

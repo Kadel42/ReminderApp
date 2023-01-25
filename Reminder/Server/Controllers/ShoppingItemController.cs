@@ -21,10 +21,50 @@ public class ShoppingItemController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("onlist/{listId}")]
+    public async Task<ActionResult<ServiceResponse<List<ShoppingItem>>>> GetItemsByList(int listId)
+    {
+        var result = await _shoppingItemService.GetItemsByList(listId);
+
+        return Ok(result);
+    }
+
+    [HttpGet("notonlist/{listId}")]
+    public async Task<ActionResult<ServiceResponse<List<ShoppingItem>>>> GetItemsNotOnList(int listId)
+    {
+        var result = await _shoppingItemService.GetItemsNotOnList(listId);
+
+        return Ok(result);
+    }
+
     [HttpGet("{itemId}")]
     public async Task<ActionResult<ServiceResponse<ShoppingItem>>> GetItem(int itemId)
     {
         var result = await _shoppingItemService.GetItem(itemId);
+
+        return Ok(result);
+    }
+
+    [HttpPost]
+    public async Task<ActionResult<ServiceResponse<ShoppingItem>>> CreateItem(ShoppingItem item)
+    {
+        var result = await _shoppingItemService.CreateItem(item);
+
+        return Ok(result);
+    }
+
+    [HttpPut]
+    public async Task<ActionResult<ServiceResponse<ShoppingItem>>> UpdateItem(ShoppingItem shoppingItem)
+    {
+        var result = await _shoppingItemService.UpdateItem(shoppingItem);
+
+        return Ok(result);
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<ActionResult<ServiceResponse<bool>>> DeleteItem(int id)
+    {
+        var result = await _shoppingItemService.DeleteItem(id);
 
         return Ok(result);
     }

@@ -42,4 +42,28 @@ public class ShoppingListController : ControllerBase
         var result = await _shoppingListService.CreateShoppingList(shoppingList);
         return Ok(result);
     }
+
+    [HttpPut]
+    public async Task<ActionResult<ServiceResponse<ShoppingList>>> UpdateShoppingList(ShoppingList shoppingList)
+    {
+        var result = await _shoppingListService.UpdateShoppingList(shoppingList);
+
+        return Ok(result);
+    }
+
+    [HttpPut("additem/{listId}/{itemId}")]
+    public async Task<ActionResult<ServiceResponse<ShoppingList>>> AddItemToList(int listId, int itemId)
+    {
+        var result = await _shoppingListService.AddItemToList(listId, itemId);
+
+        return Ok(result);
+    }
+
+    [HttpPut("removeitem/{listId}/{itemId}")]
+    public async Task<ActionResult<ServiceResponse<ShoppingList>>> RemoveItemFromList(int listId, int itemId)
+    {
+        var result = await _shoppingListService.RemoveItemFromList(listId, itemId);
+
+        return Ok(result);
+    }
 }
