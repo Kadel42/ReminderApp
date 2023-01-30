@@ -2,6 +2,7 @@
 
 public interface IShoppingListService
 {
+
     Task<ServiceResponse<List<ShoppingList>>> GetShoppingLists();
     Task<ServiceResponse<ShoppingList>> GetShoppingList(int shoppingListId);
     Task<ServiceResponse<ShoppingList>> CreateShoppingList(ShoppingList shoppingList);

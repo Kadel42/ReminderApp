@@ -68,7 +68,16 @@ public class ShoppingItemService : IShoppingItemService
     {
         var variantsInList = await _dataContext.ShoppingItemVariants.Where(v 
             => v.ShoppingListId == shoppingListId).ToListAsync();
-        var shoppingItems = new List<ShoppingItem>(); 
+        var shoppingItems = new List<ShoppingItem>();
+
+        if (variantsInList.Count == 0)
+        {
+            return new ServiceResponse<List<ShoppingItem>>
+            {
+                Success = false,
+                Message = "There are no items on this list."
+            };
+        }
 
         foreach (var variant in variantsInList)
         {
@@ -81,6 +90,16 @@ public class ShoppingItemService : IShoppingItemService
             }
             
         }
+
+        if (shoppingItems.Count == 0)
+        {
+            return new ServiceResponse<List<ShoppingItem>>
+            {
+                Success = false,
+                Message = "No items found."
+            };
+        }
+
         return new ServiceResponse<List<ShoppingItem>> { Data = shoppingItems };
     }
 
@@ -90,17 +109,29 @@ public class ShoppingItemService : IShoppingItemService
             => v.ShoppingListId == shoppingListId).ToListAsync();
         var shoppingItems = await _dataContext.ShoppingItems.ToListAsync();
 
-        foreach (var variant in variantsInList)
+        if (variantsInList.Count > 0)
         {
-
-            var shoppingItem = await _dataContext.ShoppingItems.Where(i
-                => i.Id == variant.ShoppingItemId).FirstOrDefaultAsync();
-            if (shoppingItem != null)
+            foreach (var variant in variantsInList)
             {
-                shoppingItems.Remove(shoppingItem);
-            }
 
+                var shoppingItem = await _dataContext.ShoppingItems.Where(i
+                    => i.Id == variant.ShoppingItemId).FirstOrDefaultAsync();
+                if (shoppingItem != null)
+                {
+                    shoppingItems.Remove(shoppingItem);
+                }
+            }
         }
+
+        if (shoppingItems.Count == 0)
+        {
+            return new ServiceResponse<List<ShoppingItem>>
+            {
+                Success = false,
+                Message = "All existing items are on the list."
+            };
+        }
+
         return new ServiceResponse<List<ShoppingItem>> { Data = shoppingItems };
     }
 
