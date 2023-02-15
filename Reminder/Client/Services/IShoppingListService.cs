@@ -3,6 +3,8 @@
 public interface IShoppingListService
 {
     List<ShoppingList> ShoppingLists { get; set; }
+    List<ShoppingItemVariant> BoughtItems { get; set; }
+    List<ShoppingItemVariant> ItemsToBuy { get; set; }
     string Message { get; set; }
     Task GetShoppingLists();
     Task<ServiceResponse<ShoppingList>> GetShoppingList(int shoppingListId);

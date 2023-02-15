@@ -13,6 +13,8 @@ public class ShoppingItemService : IShoppingItemService
 
     public List<ShoppingItem> ShoppingItems { get; set; } = new();
     public string Message { get; set; } = "Loading items...";
+    public List<ShoppingItem> ToBuyItems { get; set; } = new();
+    public List<ShoppingItem> BoughtItems { get; set; } = new();
 
     public async Task<ShoppingItem> CreateItem(ShoppingItem shoppingItem)
     {
@@ -56,9 +58,9 @@ public class ShoppingItemService : IShoppingItemService
 
     public async Task GetItemsByList(int shoppingListId)
     {
+        ShoppingItems = new();
         var result = 
             await _httpClient.GetFromJsonAsync<ServiceResponse<List<ShoppingItem>>>($"api/shoppingitem/onlist/{shoppingListId}");
-
         if (result != null && result.Data != null)
         {
             ShoppingItems = result.Data;
@@ -86,9 +88,21 @@ public class ShoppingItemService : IShoppingItemService
         }
     }
 
+    public async Task GetVariantsOnList(int shoppingListId)
+    {
+        ToBuyItems = new();
+        BoughtItems = new();
+        var result =
+            await _httpClient.GetFromJsonAsync<ServiceResponse<List<ShoppingItemVariant>>>($"api/shoppingitem/variants/{shoppingListId}");
+        var itemsResult =
+            await _httpClient.GetFromJsonAsync<ServiceResponse<List<ShoppingItem>>>($"api/shoppingitem/onlist/{shoppingListId}");
+
+    }
+
     public async Task<ShoppingItem> UpdateItem(ShoppingItem shoppingItem)
     {
-        var result = await _httpClient.PutAsJsonAsync(@"api/shoppingitem", shoppingItem);
+        Console.WriteLine(shoppingItem.Name);
+        var result = await _httpClient.PutAsJsonAsync($"api/shoppingitem", shoppingItem);
         return (await result.Content.ReadFromJsonAsync<ServiceResponse<ShoppingItem>>()).Data;
     }
 }

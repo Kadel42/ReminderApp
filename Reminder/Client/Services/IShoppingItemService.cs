@@ -5,6 +5,8 @@ namespace Reminder.Client.Services;
 public interface IShoppingItemService
 {
     List<ShoppingItem> ShoppingItems { get; set; }
+    List<ShoppingItem> ToBuyItems { get; set; }
+    List<ShoppingItem> BoughtItems { get; set; }
     string Message { get; set; }
     Task<ShoppingItem> CreateItem(ShoppingItem shoppingItem);
     Task<ServiceResponse<ShoppingItem>> GetItem(int shoppingItemId);
@@ -13,4 +15,5 @@ public interface IShoppingItemService
     Task GetAllItems();
     Task GetItemsByList(int shoppingListId);
     Task GetItemsNotOnList(int shoppingListId);
+    Task GetVariantsOnList(int shoppingListId);
 }

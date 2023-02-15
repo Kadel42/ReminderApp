@@ -59,7 +59,7 @@ public class ShoppingListController : ControllerBase
         return Ok(result);
     }
 
-    [HttpPut("removeitem/{listId}/{itemId}")]
+    [HttpDelete("removeitem/{listId}/{itemId}")]
     public async Task<ActionResult<ServiceResponse<ShoppingList>>> RemoveItemFromList(int listId, int itemId)
     {
         var result = await _shoppingListService.RemoveItemFromList(listId, itemId);

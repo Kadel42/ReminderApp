@@ -89,7 +89,10 @@ public class ShoppingListService : IShoppingListService
     {
         var response = new ServiceResponse<ShoppingList>();
         ShoppingList shoppingList = new();
-        shoppingList = await _dataContext.ShoppingLists.FirstOrDefaultAsync(s => s.Id == shoppingListId && !s.IsSecret);
+        shoppingList = await _dataContext.ShoppingLists
+            .Include(l => l.ShoppingItemVariants)
+            .ThenInclude(v => v.ShoppingItem)
+            .FirstOrDefaultAsync(s => s.Id == shoppingListId && !s.IsSecret);
 
         if (shoppingList == null)
         {
@@ -167,7 +170,23 @@ public class ShoppingListService : IShoppingListService
         }
 
         dbShoppingList.Name = shoppingList.Name;
-        dbShoppingList.ShoppingItemVariants = shoppingList.ShoppingItemVariants;
+
+        foreach (var variant in shoppingList.ShoppingItemVariants)
+        {
+            var dbVariant = await _dataContext.ShoppingItemVariants
+                .SingleOrDefaultAsync(v => v.ShoppingListId == variant.ShoppingListId
+                && v.ShoppingItemId == variant.ShoppingItemId);
+            if (dbVariant == null)
+            {
+                variant.ShoppingItem = null;
+                _dataContext.ShoppingItemVariants.Add(variant);
+            }
+            else
+            {
+                dbVariant.ShoppingListId = variant.ShoppingListId;
+                dbVariant.Bought = variant.Bought;
+            }
+        }
 
         await _dataContext.SaveChangesAsync();
         return new ServiceResponse<ShoppingList> { Data = shoppingList };

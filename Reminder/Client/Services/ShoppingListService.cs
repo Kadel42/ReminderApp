@@ -13,10 +13,12 @@ public class ShoppingListService : IShoppingListService
 
     public List<ShoppingList> ShoppingLists { get; set; } = new();
     public string Message { get; set; } = "Loading lists...";
+    public List<ShoppingItemVariant> BoughtItems { get; set; } = new();
+    public List<ShoppingItemVariant> ItemsToBuy { get; set; } = new();
 
     public async Task AddItemToList(int shoppingListId, ShoppingItem shoppingItem)
     {
-        await _httpClient.PostAsJsonAsync($"api/shoppinglist/additem/{shoppingListId}/{shoppingItem.Id}", shoppingItem);
+        await _httpClient.PutAsJsonAsync($"api/shoppinglist/additem/{shoppingListId}/{shoppingItem.Id}", shoppingItem);
     }
 
     public async Task<ShoppingList> CreateShoppingList(ShoppingList shoppingList)
@@ -33,32 +35,24 @@ public class ShoppingListService : IShoppingListService
 
     public async Task<ServiceResponse<ShoppingList>> GetShoppingList(int shoppingListId)
     {
-        var result = 
-            await _httpClient.GetFromJsonAsync<ServiceResponse<ShoppingList>>($"api/shoppinglist/{shoppingListId}");
-
-        if (result == null)
-        {
-            return new ServiceResponse<ShoppingList> { Success = false, Message = "List not found" };
-        }
-
+        var result = await _httpClient
+            .GetFromJsonAsync<ServiceResponse<ShoppingList>>($"api/shoppinglist/{shoppingListId}");
+        BoughtItems = result.Data.ShoppingItemVariants.Where(v => v.Bought).ToList();
+        ItemsToBuy = result.Data.ShoppingItemVariants.Where(v => !v.Bought).ToList();
         return result;
+  
     }
 
     public async Task GetShoppingLists()
     {
-        var result = 
+        var result =
             await _httpClient.GetFromJsonAsync<ServiceResponse<List<ShoppingList>>>("api/shoppinglist");
 
-        if (result != null && result.Data != null)
-        {
-            ShoppingLists = result.Data;
-        }
-
+        ShoppingLists = result.Data;
         if (ShoppingLists.Count == 0)
         {
-            Message = "No lists found.";
+            Message = "No lists.";
         }
-
     }
 
     public async Task RemoveItemFromList(int shoppingListId, int shoppingItemId)

@@ -37,6 +37,14 @@ public class ShoppingItemController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("variants/{listId}")]
+    public async Task<ActionResult<ServiceResponse<List<ShoppingItemVariant>>>> GetVariantsOnList(int listId)
+    {
+        var result = await _shoppingItemService.GetVariantsOnList(listId);
+
+        return Ok(result);
+    }
+
     [HttpGet("{itemId}")]
     public async Task<ActionResult<ServiceResponse<ShoppingItem>>> GetItem(int itemId)
     {
@@ -56,8 +64,8 @@ public class ShoppingItemController : ControllerBase
     [HttpPut]
     public async Task<ActionResult<ServiceResponse<ShoppingItem>>> UpdateItem(ShoppingItem shoppingItem)
     {
+        Console.WriteLine("controller");
         var result = await _shoppingItemService.UpdateItem(shoppingItem);
-
         return Ok(result);
     }
 

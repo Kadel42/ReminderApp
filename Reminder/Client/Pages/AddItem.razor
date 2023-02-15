@@ -1,0 +1,132 @@
+﻿@page "/additem/{ShoppingListId:int}"
+@inject IShoppingItemService ShoppingItemService
+@inject IShoppingListService ShoppingListService
+@inject IJSRuntime JSRuntime
+
+<div class="container">
+<input @bind-value="@inputText" @bind-value:event="oninput" type="text" class="search-input" maxlength="50"/>
+<br />
+@if (hasItems)
+{
+    foreach (var item in Items)
+    {
+        if (item.Editing)
+            {
+                <input @bind-value="@item.Name" @bind-value:event="oninput" required
+                type="text" class="item-input" maxlength="50" />
+                <button class="btn-square" onclick="@(async () => await SaveEdit(item))">✔️</button>
+                <button class="btn-square" onclick="@(() => CancelEdit(item))"><i class="oi oi-x"></i></button>
+                <br />
+            }
+        else
+            {
+            if (item.Name.ToLower().Contains(inputText.ToLower()))
+                {
+                    <button class="btn-item" onclick="@(() => AddItemToList(item))">+ @item.Name</button>
+                    <button class="btn-square" onclick="@(() => EditItem(item))" ><i class="oi oi-pencil"></i></button>
+                    <button class="btn-square" onclick="@(async () => await DeleteItem(item))"><i class="oi oi-trash"></i></button>
+                    <br />
+                }
+            }
+    }
+}
+else
+{
+    <span>@message</span>
+}
+@if (inputText.Length > 2)
+{
+    <button onclick="@(async () => await CreateItem())">+ New Item</button>
+}
+</div>
+
+
+@code {
+    [Parameter]
+    public int ShoppingListId { get; set; }
+    string message = "Loading items...";
+    bool hasItems = false;
+    string inputText = string.Empty;
+    List<ShoppingItem> Items = new();
+    List<string> itemNames = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ShoppingItemService.GetItemsNotOnList(ShoppingListId);
+
+
+        if (ShoppingItemService.ShoppingItems == null || ShoppingItemService.ShoppingItems.Count == 0)
+        {
+            message = "There are no items to add";
+            hasItems = false;
+        }
+        else
+        {
+
+            Items = ShoppingItemService.ShoppingItems;
+            hasItems = true;
+            await ShoppingItemService.GetAllItems();
+            if (ShoppingItemService.ShoppingItems != null && ShoppingItemService.ShoppingItems.Count > 0)
+            {
+                List<ShoppingItem> allItems = ShoppingItemService.ShoppingItems;
+                allItems.ToList().ForEach(i => itemNames.Add(i.Name));
+            }
+        }
+    }
+
+    async Task CreateItem()
+    {
+        if (itemNames.Contains(inputText))
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Item already exists (it might be on the list).");
+        }
+        else
+        {
+            ShoppingItem newItem = new ShoppingItem
+                {
+                    Name = inputText
+                };
+
+
+            await ShoppingItemService.CreateItem(newItem);
+            Items.Add(newItem);
+            itemNames.Add(newItem.Name);
+            inputText = string.Empty;
+        }
+    }
+
+    async Task DeleteItem(ShoppingItem item)
+    {
+        await ShoppingItemService.DeleteItem(item);
+        Items.Remove(item);
+        itemNames.Remove(item.Name);
+        StateHasChanged();
+    }
+
+    void EditItem(ShoppingItem item)
+    {
+        item.Editing = true;
+        StateHasChanged();
+    }
+
+    async Task SaveEdit(ShoppingItem item)
+    {
+        item.Editing = false;
+
+        await ShoppingItemService.UpdateItem(item);
+        StateHasChanged();
+    }
+
+    void CancelEdit(ShoppingItem item)
+    {
+        item.Editing = false;
+        StateHasChanged();
+    }
+
+    async Task AddItemToList(ShoppingItem item)
+    {
+        await ShoppingListService.AddItemToList(ShoppingListId, item);
+        Items.Remove(item);
+        StateHasChanged();
+    }
+}

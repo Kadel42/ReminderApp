@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Reminder.Server.Data;
 
@@ -10,9 +11,11 @@ using Reminder.Server.Data;
 namespace Reminder.Server.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20230202150507_VariantUpdate")]
+    partial class VariantUpdate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -52,8 +55,6 @@ namespace Reminder.Server.Migrations
 
                     b.HasKey("ShoppingListId", "ShoppingItemId");
 
-                    b.HasIndex("ShoppingItemId");
-
                     b.ToTable("ShoppingItemVariants");
                 });
 
@@ -80,21 +81,11 @@ namespace Reminder.Server.Migrations
 
             modelBuilder.Entity("Reminder.Shared.ShoppingItemVariant", b =>
                 {
-                    b.HasOne("Reminder.Shared.ShoppingItem", "ShoppingItem")
-                        .WithMany()
-                        .HasForeignKey("ShoppingItemId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Reminder.Shared.ShoppingList", "ShoppingList")
+                    b.HasOne("Reminder.Shared.ShoppingList", null)
                         .WithMany("ShoppingItemVariants")
                         .HasForeignKey("ShoppingListId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("ShoppingItem");
-
-                    b.Navigation("ShoppingList");
                 });
 
             modelBuilder.Entity("Reminder.Shared.ShoppingList", b =>

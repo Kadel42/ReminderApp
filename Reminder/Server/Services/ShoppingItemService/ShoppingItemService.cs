@@ -135,20 +135,37 @@ public class ShoppingItemService : IShoppingItemService
         return new ServiceResponse<List<ShoppingItem>> { Data = shoppingItems };
     }
 
+    public async Task<ServiceResponse<List<ShoppingItemVariant>>> GetVariantsOnList(int shoppingListId)
+    {
+        var variantsInList = await _dataContext.ShoppingItemVariants.Where(v
+            => v.ShoppingListId == shoppingListId).ToListAsync();
+
+        if (variantsInList == null || variantsInList.Count == 0)
+        {
+            return new ServiceResponse<List<ShoppingItemVariant>>
+            {
+                Success = false,
+                Message = "No items on list."
+            };
+        }
+
+        return new ServiceResponse<List<ShoppingItemVariant>> { Data = variantsInList };
+    }
+
     public async Task<ServiceResponse<ShoppingItem>> UpdateItem(ShoppingItem shoppingItem)
     {
-        var dbShoppingItem = await _dataContext.ShoppingLists.FindAsync(shoppingItem.Id);
+        var dbShoppingItem = await _dataContext.ShoppingItems.FindAsync(shoppingItem.Id);
         if (dbShoppingItem == null)
         {
             return new ServiceResponse<ShoppingItem>
             {
                 Success = false,
                 Message = "Item not found."
-
+               
             };
         }
-
         dbShoppingItem.Name = shoppingItem.Name;
+        dbShoppingItem.Editing= shoppingItem.Editing;
 
         await _dataContext.SaveChangesAsync();
         return new ServiceResponse<ShoppingItem> { Data = shoppingItem };

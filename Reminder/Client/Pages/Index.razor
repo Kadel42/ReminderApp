@@ -1,9 +1,204 @@
 ﻿@page "/"
+@inject IShoppingListService ShoppingListService
+@inject IJSRuntime JSRuntime
 
-<PageTitle>Index</PageTitle>
+<PageTitle>Shopping list</PageTitle>
 
-<h1>Hello, world!</h1>
+@if (ShoppingList == null)
+{
+    <span>@message</span>
+}
+else if (addingList)
+{
+    <input type="text" @bind-value="listName" @bind-value:event="oninput" />
+    <button class="btn-square" onclick="@(async () => await SaveEdit())">✔️</button>
+    <button class="btn-square" @onclick="CancelEdit"><i class="oi oi-x"></i></button>
+}
+else
+{
+    <div class="list-menu">
+            <button class="btn-square" @onclick="AddList" ><i class="oi oi-plus"></i></button>
+        
+        @if (ShoppingListService.ShoppingLists != null && ShoppingListService.ShoppingLists.Count > 0)
+        {
+            <select @onchange="ChangeList" class="list-selector">
+                @foreach (var list in ShoppingListService.ShoppingLists)
+            {
+                <option value="@list.Id">@list.Name</option>
+            }
+            </select>
+            <button class="btn-square" @onclick="RemoveList"><i class="oi oi-trash"></i></button>
+        }
+        
+    </div>
+    <hr />
+    <label>Items to buy:</label>
+    
+    @if (ShoppingListService.ItemsToBuy.Count > 0 && ShoppingListService.ItemsToBuy != null)
+    {
+        
+        <div class="items-to-buy">
+            @foreach (var variant in ShoppingListService.ItemsToBuy)
+            {
+                <span>@variant.ShoppingItem.Name</span>
+                <button class="btn-square" onclick="@(() => ItemBought(variant))">✔️</button>
+                <button class="btn-square" onclick="@(() => RemoveItem(variant.ShoppingItemId))"><i class="oi oi-trash"></i></button>
 
-Welcome to your new app.
+                <br />
+            }
+        </div>
+        
+        
+        
+    }
+    else
+    {
+        <h1>@message</h1>
+    }
+    if (canAddItem)
+    {
+        <a href="/additem/@ShoppingListId" class="btn-rectangle">+ Add Item</a>
+        
+    }
+    <hr />
+    <label>Bought items:</label>
+    @if (ShoppingListService.BoughtItems.Count > 0 && ShoppingListService.BoughtItems != null)
+    {
 
-<SurveyPrompt Title="How is Blazor working for you?" />
+        <div class="items-bought">
+            @foreach (var variant in ShoppingListService.BoughtItems)
+            {
+                <span>@variant.ShoppingItem.Name</span>
+                <button class="btn-square" onclick="@(() => ItemBought(variant))"><i class="oi oi-arrow-top"></i></button>
+                <button class="btn-square" onclick="@(() => RemoveItem(variant.ShoppingItemId))"><i class="oi oi-trash"></i></button>
+                <br />
+            }
+        </div>
+        <button class="btn-rectangle" @onclick="EmptyBought"><i class="oi oi-trash"></i> Empty List</button>
+        <hr />
+
+    }
+    else
+    {
+        <h1>@message</h1>
+    }
+    
+}
+
+
+@code {
+    int ShoppingListId = 1;
+    ShoppingList ShoppingList = new();
+    bool canAddItem = false;
+    string message = string.Empty;
+    string listName = string.Empty;
+    bool addingList = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        message = "Loading list...";
+        await ShoppingListService.GetShoppingLists();
+        if (ShoppingListService.ShoppingLists != null && ShoppingListService.ShoppingLists.Count > 0)
+        {
+            ShoppingListId = ShoppingListService.ShoppingLists[0].Id;
+        }
+        await LoadList();
+    }
+
+    async Task LoadList()
+    {
+
+        var result = await ShoppingListService.GetShoppingList(ShoppingListId);
+
+        if (!result.Success || result.Data == null)
+        {
+            canAddItem = false;
+            message = result.Message;
+        }
+        else
+        {
+            canAddItem = true;
+            ShoppingList = result.Data;
+        }
+        if (ShoppingListService.BoughtItems.Count == 0 || ShoppingListService.ItemsToBuy.Count == 0)
+        {
+            message = "No items here.";
+        }
+    }
+
+    async void ChangeList(ChangeEventArgs e)
+    {
+        ShoppingListId = Convert.ToInt32(e.Value);
+        await LoadList();
+        StateHasChanged();
+    }
+
+    async void ItemBought(ShoppingItemVariant shoppingItemVariant)
+    {
+        shoppingItemVariant.Bought = !shoppingItemVariant.Bought;
+
+        await ShoppingListService.UpdateShoppingList(ShoppingList);
+        await LoadList();
+        StateHasChanged();
+    }
+
+    async void RemoveItem(int shoppingItemId)
+    {
+        await ShoppingListService.RemoveItemFromList(ShoppingListId, shoppingItemId);
+        await LoadList();
+        StateHasChanged();
+    }
+
+    async void EmptyBought()
+    {
+        foreach (var item in ShoppingListService.BoughtItems)
+        {
+            RemoveItem(item.ShoppingItemId);
+        }
+        await LoadList();
+        StateHasChanged();
+    }
+
+    async void RemoveList()
+    {
+        if (ShoppingListService.ShoppingLists.Count == 1)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "There must be at least 1 list!");
+        }
+        else
+        {
+
+            await ShoppingListService.DeleteShoppingList(ShoppingList);
+            await ShoppingListService.GetShoppingLists();
+            ShoppingListId = ShoppingListService.ShoppingLists[0].Id;
+            await LoadList();
+            StateHasChanged();
+        }
+
+    }
+
+    void AddList()
+    {
+        addingList = true;
+    }
+
+    async Task SaveEdit()
+    {
+        ShoppingList newList = new ShoppingList
+            {
+                Name = listName
+            };
+        await ShoppingListService.CreateShoppingList(newList);
+        await ShoppingListService.GetShoppingLists();
+        addingList = false;
+        listName = string.Empty;
+        await LoadList();
+        StateHasChanged();
+    }
+
+    void CancelEdit()
+    {
+        addingList = false;
+        StateHasChanged();
+    }
+}
