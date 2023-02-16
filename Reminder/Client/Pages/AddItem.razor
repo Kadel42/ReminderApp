@@ -89,7 +89,12 @@ else
 
 
             await ShoppingItemService.CreateItem(newItem);
-            Items.Add(newItem);
+            await ShoppingItemService.GetItemsNotOnList(ShoppingListId);
+            if (ShoppingItemService.ShoppingItems != null && ShoppingItemService.ShoppingItems.Count > 0)
+            {
+                
+                Items = ShoppingItemService.ShoppingItems;
+            }
             itemNames.Add(newItem.Name);
             inputText = string.Empty;
         }
